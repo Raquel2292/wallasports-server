@@ -26,11 +26,34 @@ router.post("/signup", async (req, res, next) => {
     return;
   }
 
-  //la contraseña sea lo suficientemente fuerte
   //el email tenga la estructura correcta
+  const emailStructure =
+    /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/g;
+  if (emailStructure.test(email) === false) {
+    res.status(400).json({ errorMessage: "Formato de email incorrecto" });
+    return;
+  }
+
+  //constraseña unica
+  const foundEmail = await User.findOne({ email: email });
+  if (foundEmail !== null) {
+    res.status(400).json({ errorMessage: "Email ya registrado" });
+    return;
+  }
   //el usuario no esté duplicado
+  const foundUser = await User.findOne({ userName: userName });
+  if (foundUser !== null) {
+    res.status(400).json({ errorMessage: "Username ya registrado." });
+    return;
+  }
 
   try {
+    // que la contraseña sea correcta
+    const isPasswordValid = await bcrypt.compare(password, foundUser.password);
+    if (isPasswordValid === false) {
+      res.status(400).json({ errorMessage: "Credenciales no validas" });
+      return;
+    }
     //2. codificar la constraseña
     const salt = await bcrypt.genSalt(10);
     const hashPassword = await bcrypt.hash(password, salt);
@@ -47,7 +70,7 @@ router.post("/signup", async (req, res, next) => {
     //3. crear el usuario
     await User.create(newUser);
     //4. enviar un mensaje de OK al Fronted
-    res.status(200).json("usuario registrado");
+    res.status(201).json("usuario registrado");
   } catch (error) {
     next(error);
   }
@@ -89,7 +112,6 @@ router.post("/login", async (req, res, next) => {
       _id: foundUser._id,
       email: foundUser.email,
       name: foundUser.name,
-      lastname: foundUser.lastname,
 
       //! la información importante del usuario tiene que ir aquí
     };
@@ -97,23 +119,25 @@ router.post("/login", async (req, res, next) => {
     // a .sing se le pasan 3 argumentos
     const authToken = jwt.sign(
       payload, // informacion del usuario, que será accesible en distintas partes de server y client
-      procces.env.TOKEN_SECRET, // palabra secreta que double encrypta el token
+      process.env.TOKEN_SECRET, // palabra secreta que double encrypta el token
       { algorithm: "HS256", expiresIn: "8h" } // va a tener configuraciones adicionales del Token (Header)
     );
 
     //eviar Token al cliente
     res.status(200).json({ authToken: authToken });
-  } catch (error) {}
+  } catch (error) {
+    next(error);
+  }
 });
 // GET "/api/auth/verify" =>  para que le Backend diga al Fronted si el usuario ya ha sido validado
 router.get("/verify", isAuthenticated, (req, res, next) => {
   //esta ruta verifica que el usuario tiene un Token válido
   //se utilizará para la primera vez que el usuario visita la web
 
-  //como tenemos acceeso a información del usuario haciendo esta llamada?
+  //como tenemos acceso a información del usuario haciendo esta llamada?
   console.log(req.payload); //es toda la informacion creada en const payload hecha más arriba
 
-  res.status(200).json("token valido, usuario ya logeado");
+  res.status(200).json({user: req.payload});
 });
 
 module.exports = router;
