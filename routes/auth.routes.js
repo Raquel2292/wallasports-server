@@ -3,22 +3,22 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/User.model");
 const jwt = require("jsonwebtoken");
 const isAuthenticated = require("../middlewares/auth.middlewares");
-
+/* const uploader = require("../middlewares/cloudinary")
+ */
 // aquí irán nuestras rutas de autenticación
 
 //POST "/api/auth/signup" => registrar a un usuario
 router.post("/signup", async (req, res, next) => {
-  console.log(req.body);
-  const { name, lastname, email, userImage, password, favorites } = req.body;
-
+  console.log("Lo que llega al signup", req.body);
+  const { name, lastname, email, password, favorites, userImage } = req.body;
   //1. hacer validaciones de Backend
   if (
     name === "" ||
     lastname === "" ||
     email === "" ||
-    userImage === "" ||
     password === "" ||
-    favorites === ""
+    favorites === "" || 
+    userImage === ""
   ) {
     res
       .status(400)
@@ -40,20 +40,16 @@ router.post("/signup", async (req, res, next) => {
     res.status(400).json({ errorMessage: "Email ya registrado" });
     return;
   }
-  //el usuario no esté duplicado
-  const foundUser = await User.findOne({ userName: userName });
-  if (foundUser !== null) {
-    res.status(400).json({ errorMessage: "Username ya registrado." });
-    return;
-  }
+  
 
   try {
-    // que la contraseña sea correcta
-    const isPasswordValid = await bcrypt.compare(password, foundUser.password);
-    if (isPasswordValid === false) {
-      res.status(400).json({ errorMessage: "Credenciales no validas" });
+      //el usuario no esté duplicado
+    const foundUser = await User.findOne({ name: name });
+    if (foundUser !== null) {
+      res.status(400).json({ errorMessage: "Username ya registrado." });
       return;
     }
+ 
     //2. codificar la constraseña
     const salt = await bcrypt.genSalt(10);
     const hashPassword = await bcrypt.hash(password, salt);
@@ -68,9 +64,24 @@ router.post("/signup", async (req, res, next) => {
     };
 
     //3. crear el usuario
-    await User.create(newUser);
-    //4. enviar un mensaje de OK al Fronted
-    res.status(201).json("usuario registrado");
+    await User.create(newUser).then((response) => {
+      console.log("LA RESPUESTA!!!!!!!!!!!!!", response)
+      const payload = {
+        _id: response._id,
+        email: response.email,
+        name: response.name
+      };
+  
+      // a .sing se le pasan 3 argumentos
+      const authToken = jwt.sign(
+        payload, // informacion del usuario, que será accesible en distintas partes de server y client
+        process.env.TOKEN_SECRET, // palabra secreta que double encrypta el token
+        { algorithm: "HS256", expiresIn: "8h" } // va a tener configuraciones adicionales del Token (Header)
+      );
+  
+      //eviar Token al cliente
+      res.status(200).json({ authToken: authToken });
+    });
   } catch (error) {
     next(error);
   }
