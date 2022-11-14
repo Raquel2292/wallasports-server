@@ -8,7 +8,7 @@ const formContactSchema = new Schema(
      }],
      products: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: products
+        ref: "Product"
      }],
      text: String
     }

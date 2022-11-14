@@ -64,7 +64,7 @@ router.post("/signup", async (req, res, next) => {
     };
 
     //3. crear el usuario
-    await User.create(newUser).then((response) => {
+    await User.create(newUser).then((response) => { /*esto está mal no se pueden mezclar then con await, mirar demas rutas por su acaso*/
       console.log("LA RESPUESTA!!!!!!!!!!!!!", response)
       const payload = {
         _id: response._id,
