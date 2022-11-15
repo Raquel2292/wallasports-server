@@ -17,7 +17,7 @@ router.post("/signup", async (req, res, next) => {
     lastname === "" ||
     email === "" ||
     password === "" ||
-    favorites === "" || 
+    favorites === "" ||
     userImage === ""
   ) {
     res
@@ -34,22 +34,21 @@ router.post("/signup", async (req, res, next) => {
     return;
   }
 
-  //constraseña unica
+  //email unica
   const foundEmail = await User.findOne({ email: email });
   if (foundEmail !== null) {
     res.status(400).json({ errorMessage: "Email ya registrado" });
     return;
   }
-  
 
   try {
-      //el usuario no esté duplicado
+    //el usuario no esté duplicado
     const foundUser = await User.findOne({ name: name });
     if (foundUser !== null) {
       res.status(400).json({ errorMessage: "Username ya registrado." });
       return;
     }
- 
+
     //2. codificar la constraseña
     const salt = await bcrypt.genSalt(10);
     const hashPassword = await bcrypt.hash(password, salt);
@@ -64,24 +63,22 @@ router.post("/signup", async (req, res, next) => {
     };
 
     //3. crear el usuario
-    await User.create(newUser).then((response) => { /*esto está mal no se pueden mezclar then con await, mirar demas rutas por su acaso*/
-      console.log("LA RESPUESTA!!!!!!!!!!!!!", response)
-      const payload = {
-        _id: response._id,
-        email: response.email,
-        name: response.name
-      };
-  
-      // a .sing se le pasan 3 argumentos
-      const authToken = jwt.sign(
-        payload, // informacion del usuario, que será accesible en distintas partes de server y client
-        process.env.TOKEN_SECRET, // palabra secreta que double encrypta el token
-        { algorithm: "HS256", expiresIn: "8h" } // va a tener configuraciones adicionales del Token (Header)
-      );
-  
-      //eviar Token al cliente
-      res.status(200).json({ authToken: authToken });
-    });
+    const response = await User.create(newUser);
+    const payload = {
+      _id: response._id,
+      email: response.email,
+      name: response.name,
+    };
+
+    // a .sing se le pasan 3 argumentos
+    const authToken = jwt.sign(
+      payload, // informacion del usuario, que será accesible en distintas partes de server y client
+      process.env.TOKEN_SECRET, // palabra secreta que double encrypta el token
+      { algorithm: "HS256", expiresIn: "8h" } // va a tener configuraciones adicionales del Token (Header)
+    );
+
+    //eviar Token al cliente
+    res.status(200).json({ authToken: authToken });
   } catch (error) {
     next(error);
   }
@@ -140,6 +137,42 @@ router.post("/login", async (req, res, next) => {
     next(error);
   }
 });
+
+//editar usuario
+router.patch("/:editId", async (req, res, next) => {
+  // buscar los cambios a editar del documento
+  const userEdit = {
+    name: req.body.name,
+    lastname: req.body.lastname,
+    email: req.body.email,
+    userImage: req.body.userImage,
+    favorites: req.body.favorites,
+  };
+
+  try {
+    // editar el documento por su id
+    await User.findByIdAndUpdate(req.params.editId, userEdit);
+    // pasar 2 argumento. (el id, la info a actualizar)
+
+    // enviar mensaje de "todo bien" al FE
+    res.status(200).json("OK, usuario editado");
+  } catch (error) {
+    next(error);
+  }
+});
+
+//Borrar usuario
+router.delete("/:deleteId", async (req, res, next) => {
+  try {
+    //borrar documento por su id y enviar respuesta al fronted
+    await User.findByIdAndDelete(req.params.deleteId);
+    //enviar respuesta al fronted
+    res.status(200).json("OK, usuario borrado");
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET "/api/auth/verify" =>  para que le Backend diga al Fronted si el usuario ya ha sido validado
 router.get("/verify", isAuthenticated, (req, res, next) => {
   //esta ruta verifica que el usuario tiene un Token válido
@@ -148,7 +181,7 @@ router.get("/verify", isAuthenticated, (req, res, next) => {
   //como tenemos acceso a información del usuario haciendo esta llamada?
   console.log(req.payload); //es toda la informacion creada en const payload hecha más arriba
 
-  res.status(200).json({user: req.payload});
+  res.status(200).json({ user: req.payload });
 });
 
 module.exports = router;

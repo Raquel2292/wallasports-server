@@ -15,10 +15,10 @@ const userSchema = new Schema(
       type: String,
       required: [true, 'Password is required.']
     },
-    favorites: {
+    favorites: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product"
-    } 
+    }] 
   },
   {
     // this second object adds extra properties: `createdAt` and `updatedAt`    

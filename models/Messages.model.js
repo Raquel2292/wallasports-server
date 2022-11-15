@@ -1,21 +1,21 @@
 const { Schema, model, mongoose } = require("mongoose");
 
-const formContactSchema = new Schema(
+const messagesSchema = new Schema(
     {
-     user: [{
+     user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: user
-     }],
-     products: [{
+        ref: "User"
+     },
+     products: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Product"
-     }],
+     },
      text: String
     }
   );
 
-const FormContact = mongoose.model("FormContact", formContactSchema)
+const Messages = mongoose.model("Messages", messagesSchema)
 
 
 
-module.exports = FormContact;
+module.exports = Messages;

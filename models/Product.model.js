@@ -7,14 +7,16 @@ const productSchema = new mongoose.Schema(
       description: String,
       price: Number,
       imageProduct: String,
-      userId: String,
-      type: String,
+      type: {
+        type: String,
+        enum: ["material", "clothing"]
+      },
       reserved: Boolean,
 
-      owner : [{
+      owner : {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
-      }]
+      }
     }
   );
 
