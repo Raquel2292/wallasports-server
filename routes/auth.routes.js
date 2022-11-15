@@ -17,8 +17,8 @@ router.post("/signup", async (req, res, next) => {
     lastname === "" ||
     email === "" ||
     password === "" ||
-    favorites === "" ||
-    userImage === ""
+    favorites === "" 
+    /* userImage === "" */
   ) {
     res
       .status(400)
