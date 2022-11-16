@@ -14,4 +14,7 @@ router.use ("/products", productsRoutes)
 const uploadRoutes = require("./upload.routes")
 router.use("/upload", uploadRoutes)
 
+const messagesRoutes = require("./messages.routes")
+router.use("/messages", messagesRoutes)
+
 module.exports = router;
