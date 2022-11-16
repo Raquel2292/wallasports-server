@@ -6,7 +6,7 @@ const productSchema = new mongoose.Schema(
       name: String,
       description: String,
       price: Number,
-      imageProduct: String,
+      productImage: String,
       type: {
         type: String,
         enum: ["material", "clothing"]

@@ -17,8 +17,8 @@ router.post("/signup", async (req, res, next) => {
     lastname === "" ||
     email === "" ||
     password === "" ||
-    favorites === "" 
-    /* userImage === "" */
+    favorites === [] || 
+    userImage === ""
   ) {
     res
       .status(400)
@@ -68,6 +68,8 @@ router.post("/signup", async (req, res, next) => {
       _id: response._id,
       email: response.email,
       name: response.name,
+      favorites: foundUser.favorites,
+      userImage: foundUser.userImage
     };
 
     // a .sing se le pasan 3 argumentos
@@ -120,6 +122,8 @@ router.post("/login", async (req, res, next) => {
       _id: foundUser._id,
       email: foundUser.email,
       name: foundUser.name,
+      favorites: foundUser.favorites,
+      userImage: foundUser.userImage
 
       //! la información importante del usuario tiene que ir aquí
     };
@@ -174,14 +178,15 @@ router.delete("/:deleteId", async (req, res, next) => {
 });
 
 // GET "/api/auth/verify" =>  para que le Backend diga al Fronted si el usuario ya ha sido validado
-router.get("/verify", isAuthenticated, (req, res, next) => {
+router.get("/verify", isAuthenticated, async (req, res, next) => {
   //esta ruta verifica que el usuario tiene un Token válido
   //se utilizará para la primera vez que el usuario visita la web
 
   //como tenemos acceso a información del usuario haciendo esta llamada?
-  console.log(req.payload); //es toda la informacion creada en const payload hecha más arriba
+  //es toda la informacion creada en const payload hecha más arriba
+  const user = await User.findById( req.payload._id);
 
-  res.status(200).json({ user: req.payload });
+  res.status(200).json({ user: user });
 });
 
 module.exports = router;

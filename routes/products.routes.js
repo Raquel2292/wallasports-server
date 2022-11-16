@@ -5,7 +5,7 @@ const isAuthenticated = require("../middlewares/auth.middlewares.js")
 
 router.post("/upload", async (req, res, next) => {
   console.log("Lo que llega al productsList", req.body);
-  const { name, description, price, type, reserved, imageProduct } = req.body;
+  const { name, description, price, type, reserved, productImage, owner } = req.body;
   //1. hacer validaciones de Backend
   const newProduct = {
     name,
@@ -13,7 +13,7 @@ router.post("/upload", async (req, res, next) => {
     price,
     type,
     reserved,
-    imageProduct,
+    productImage,
     owner,
   };
 
@@ -38,9 +38,30 @@ router.get("/list/:type", async (req, res, next) => {
   }
 });
 
+router.get("/owner/:userId", async (req, res, next) => {
+  try {
+    const response = await Product.find({ owner: req.params.userId }); //recojo los parámetros por el owner
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+});
 
-//PATCH "/products/detail/:idProduct"
-router.patch("/detail/:idProduct", isAuthenticated, async (req, res, next) => {
+//GET "/products/favorites/:favorites"
+//no me lo entiende como elemento de un [], me separa los id por comas
+router.get("/favorites/:favorites", async (req, res, next) => {
+  try {
+    const response = await Product.find({ _id : { $in : req.params.favorites }})
+    res.status(200).json(response);
+
+  }catch(error){
+    next(error)
+  }
+})
+
+
+//PATCH "/products/favorites/:idProduct"
+router.patch("/add-favorites/:idProduct", isAuthenticated, async (req, res, next) => {
   //1.sacar id del producto
   const idProduct = req.params.idProduct
   //2.sacar id del usuario
@@ -48,6 +69,21 @@ router.patch("/detail/:idProduct", isAuthenticated, async (req, res, next) => {
   
   try {
     const response = await User.findByIdAndUpdate(userId, {$push: {favorites: idProduct }}); //en mi usuario me crea un favorito que sea el Id del producto
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+});
+
+//PATCH "/products/favorites/:idProduct"
+router.patch("/delete-favorites/:idProduct", isAuthenticated, async (req, res, next) => {
+  //1.sacar id del producto
+  const idProduct = req.params.idProduct
+  //2.sacar id del usuario
+  const userId = req.payload._id
+  
+  try {
+    const response = await User.findByIdAndUpdate(userId, {$pull: {favorites: idProduct }}); //en mi usuario me elimina un favorito que sea el Id del producto
     res.status(200).json(response);
   } catch (error) {
     next(error);
@@ -87,7 +123,7 @@ router.patch("/:editId", async (req, res, next) => {
     description: req.body.description,
     price: req.body.price,
     reserved: req.body.reserved,
-    imageProduct: req.body.imageProduct,
+    productImage: req.body.productImage,
   };
 
   try {
