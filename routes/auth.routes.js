@@ -166,10 +166,12 @@ router.patch("/:editId", async (req, res, next) => {
 });
 
 //Borrar usuario
-router.delete("/:deleteId", async (req, res, next) => {
+router.delete("/:deleteId", /* isAuthenticated, */ async (req, res, next) => {
   try {
     //borrar documento por su id y enviar respuesta al fronted
     await User.findByIdAndDelete(req.params.deleteId);
+    //me busca y borra todos los productos en los que el dueño sea el Id del Usuario
+    /* await Product.find({ owner: req.payload._id }) */
     //enviar respuesta al fronted
     res.status(200).json("OK, usuario borrado");
   } catch (error) {
