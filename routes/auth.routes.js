@@ -70,8 +70,8 @@ router.post("/signup", async (req, res, next) => {
       _id: response._id,
       email: response.email,
       name: response.name,
-      favorites: foundUser.favorites,
-      userImage: foundUser.userImage
+      favorites: response.favorites,
+      userImage: response.userImage
     };
 
     // a .sing se le pasan 3 argumentos

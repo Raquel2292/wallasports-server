@@ -52,7 +52,7 @@ router.get("/owner/:userId", async (req, res, next) => {
 //crear una lista de productos favoritos
 router.get("/favorites", isAuthenticated, async (req, res, next) => {
   try {
-    const user = await User.findById(req.payload._id).populate("favorites");
+    const user = await User.findById(req.payload._id).populate("favorites");//populate => cambia los ids por toda la información de ese documento. nos da toda la informacion de ese producto
     const response = await Product.find({ _id: { $in: user.favorites } });
     res.status(200).json(response);
   } catch (error) {
@@ -72,7 +72,7 @@ router.patch(
 
     try {
       const response = await User.findByIdAndUpdate(userId, {
-        $push: { favorites: idProduct },
+        $push: { favorites: idProduct },  
       }); //en mi usuario me crea un favorito que sea el Id del producto
       res.status(200).json(response);
     } catch (error) {
